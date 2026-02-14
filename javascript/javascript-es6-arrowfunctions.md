@@ -106,6 +106,21 @@ const button = {
 };
 ```
 
+```js
+button.addEventListener('click', function() {
+  console.log(this); // → クリックされたbutton要素
+});
+
+button.addEventListener('click', () => {
+  console.log(this); // → button要素ではない（外側のthis）
+});
+
+// ただし、this の代わりに event.target を使えば同じことができるので、実務でもアロー関数が一般的です。
+button.addEventListener('click', (event) => {
+  console.log(event.target); // → クリックされたbutton要素
+ });
+```
+
 まとめ：一言で言うと
 
 通常の function → 「誰が呼んだか」で this が変わる（動的）
