@@ -132,3 +132,13 @@ document.querySelector('[type="text"]');
 |  要素.textContent  |  内部テキストの文字列<br>（タグ以外の文字列）  |
 |  要素.value  |  フォームの値の文字列  |
 |  要素.属性名  |  属性の値の文字列  |
+
+`innerHTML()` と `textContent`
+
+`innerHTML()` にユーザーの入力値をそのまま入れると危険
+
+```js
+// ユーザーが悪意のある入力をした場合
+const userInput = '<img src=x onerror="alert(\'攻撃\')">';
+el.innerHTML = userInput;   // → スクリプトが実行されてしまう
+el.textContent = userInput; // → 文字としてそのまま表示される（安全）
