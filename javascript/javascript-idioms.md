@@ -188,3 +188,51 @@ arr.sort((a, b) => {
 })
 console.log(arr) // [9, 12, 365, 1024]
 ```
+
+---
+
+## 配列の要素を並び替え（ドラッグドロップで UI を並べ替える時などに使用）
+
+spliceは破壊的だからReactではコピーしてから使う
+
+```js
+  const reorderTodos = useCallback((activeId, overId) => {
+    setTodos((prev) => {
+      const oldIndex = prev.findIndex((todo) => todo.id === activeId); // 並べ替え対象となる TODO の index
+      const newIndex = prev.findIndex((todo) => todo.id === overId); // 順番変更対象となる TODO の index
+
+      if (oldIndex === -1 || newIndex === -1) return prev; // 該当する要素がなかった場合は現在の状態を返す
+
+      const newTodos = [...prev]; // 配列をコピー
+      const [removed] = newTodos.splice(oldIndex, 1); // splice で並べ替え対象を抜き取る
+      // newTodos = [ A, B, C, D ] とすると...
+      // splice(1, 1) → index1から1個取り出す
+      // removed = B
+      // const [removed] = の [] は分割代入。splice は取り出した要素を配列で返すので、その最初の1個を取り出している。
+      // newTodos = [ A, C, D ]  ← B が抜けた
+      newTodos.splice(newIndex, 0, removed); // 抜き取った B を newIndex の位置に差し込む
+      // splice(3, 0, B) → index3の位置に、0個削除して、Bを挿入
+      // newTodos = [ A, C, D, B ]
+      // before: [ A, B, C, D ] after:  [ A, C, D, B ]
+      // Bが末尾に移動した。配列の順番が変わったので、画面の表示順も変わる。
+
+      return newTodos;
+    });
+  }, []);
+```
+
+---
+
+## React での定番操作パターン
+
+React では元のデータを直接変えず、新しいデータを作って差し替えるのが基本。
+
+| やりたいこと | Reactでの定番 | 理由 |
+|---|---|---|
+| 要素を削除 | `filter()` で除外した新しい配列を返す | 非破壊的 |
+| 要素を移動 | コピーしてから `splice` × 2回 | splice は破壊的なのでコピーが必須 |
+| 要素を更新 | `map()` で新しいオブジェクトに差し替え | 非破壊的 |
+
+**出典：** `hooks/useTodos.js`（Todo アプリ）
+
+---
