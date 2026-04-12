@@ -9,6 +9,70 @@
 | 3 | forEach | 配列の要素を繰り返すのではない場合には次を検討する |
 | 4 | for |  |
 
+### 目的による使い分け
+
+| メソッド | 目的 | 戻り値 |
+|----------|------|--------|
+| `forEach` | 副作用を起こす（DOM操作・保存など） | なし（`undefined`） |
+| `map` | 配列を別の配列に変換する | 新しい配列 |
+| `for...of` | どちらにも使える汎用ループ | — |
+
+**`map` を使うべきでないケース**：戻り値の配列を使わない場合。変換結果を捨てるなら `forEach` の方が意図が明確。
+
+```js
+// NG：map の結果を使っていない
+memos.map((memo) => {
+  addMemoToList(memo);
+});
+
+// OK：副作用が目的なら forEach
+memos.forEach((memo) => {
+  addMemoToList(memo);
+});
+```
+
+**`forEach` より `for...of` を選ぶケース**
+
+| | `forEach` | `for...of` |
+|---|---|---|
+| `break` / `continue` | 使えない | 使える |
+| `await` との相性 | 悪い | 良い |
+| 配列以外（Map・Set など） | 不可 | 可 |
+
+### 副作用（Side Effect）とは
+
+「**関数の外の状態を変えること**」。関数本来の仕事（値を受け取って値を返す）以外の影響を外に与えることを指す。
+
+```js
+// 副作用なし：受け取った値を計算して返すだけ
+function double(n) {
+  return n * 2;
+}
+
+// 副作用あり：外の DOM を変更している
+function showMessage(text) {
+  document.querySelector("#status").textContent = text;
+}
+
+// 副作用あり：外の localStorage を変更している
+function saveMemo(memo) {
+  localStorage.setItem("memo", memo);
+}
+```
+
+DOM操作・localStorage・APIリクエスト・`console.log` なども副作用に含まれる。
+
+**`forEach` が「副作用向き」と言われる理由**：`forEach` は戻り値が `undefined` の設計で、「外への影響（副作用）を起こすためのループ」という意図が最初から明確になっている。戻り値を使わないのに `map` を使うのは意図が伝わりにくい。
+
+**React の `useEffect` との繋がり**：`useEffect` が「副作用を扱うフック」と説明されるのも同じ意味。コンポーネントの本来の仕事は「状態を受け取って画面を返すこと」で、それ以外の外への影響（API通信・DOM操作・localStorage）を副作用と呼び、`useEffect` に分離して書く。
+
+| | 説明 | 例 |
+|---|---|---|
+| 副作用なし | 受け取って返すだけ | 計算・変換・フィルター |
+| 副作用あり | 外の状態を変える | DOM操作・localStorage・API通信・console.log |
+
+> 「副作用」はネガティブな言葉ではなく、**「関数の外に影響を与える処理」を指す中立的な技術用語**。
+
 ---
 
 ## 非破壊的
