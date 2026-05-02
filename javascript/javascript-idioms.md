@@ -18,6 +18,7 @@
 - React での定番操作パターン
 - 関数の実行と関数の参照
 - ガード節（Guard Clause）
+- Result型パターン
 
 ---
 
@@ -313,3 +314,81 @@ function validateUsername() {
 読み方：「NGなら、ここで終了」という1行の宣言として読む。
 
 **出典：** `study-archive/javascript/practice/formValidation.js`（フォームバリデーション課題）
+
+---
+
+## Result型パターン
+
+```ts
+// 入力値検証、数値変換を行う関数
+function validateInputToInteger(value: string, max: number): { value: number } | { error: string } {
+  if (value.trim() === '') return { error: '値を入力してください' }
+  const num = Number(value)
+  if (Number.isNaN(num)) return { error: '有効な数値を入力してください' }
+  if (num < 1) return { error: '1以上の数値を入力してください' }
+  if (num > max) return { error: `${max}以下の数値を入力してください` }
+  return { value: Math.floor(num) }
+}
+
+export function useBmiCalculator() {
+  // 入力値を検証し、エラーを設定する関数
+  const validateAndSetError = (value: string, max: number) => {
+    const result = validateInputToInteger(value, max)
+    if ('error' in result) {
+      setError(result.error)
+      setBmi('ー')
+    } else {
+      setError(null)
+    }
+  }
+}
+```
+
+一方、ハンドラーの中でエラーを返すパターン
+
+```ts
+// 空文字バリデーション
+function validateNotEmpty(value:string) {
+  if (value.trim() === '') {
+    return false;
+  }
+  return true;
+}
+
+// 入力値バリデーション
+function validateScoreRange(value: string) {
+  const parsedValue = parseInt(value, 10)
+  if (isNaN(parsedValue) || parsedValue < 0 || parsedValue > 100) {
+    return false;
+  }
+  return true;
+}
+
+export function useScoreSort() {
+  const handleBlur = (subject: string) => {
+    setScores(prev =>
+      prev.map(score => {
+        if (score.subject !== subject) return score
+        if (!validateNotEmpty(score.value)) return {...score, error: `${score.subject}の点数が空です`}
+        if (!validateScoreRange(score.value)) return {...score, error: '0以上100以下の数字を入力してください'}
+        return {...score, error: ''}
+      })
+    )
+  }
+}
+```
+
+### 2パターンの比較
+
+| | Result型（useBmiCalculator） | true/false型（useScoreSort） |
+|---|---|---|
+| バリデーション関数の返り値 | `{ value: number } \| { error: string }` | `true / false` |
+| エラーメッセージの管理場所 | 関数の中 | ハンドラ側で書く |
+| 呼び出し側の書き方 | `'error' in result` で分岐 | `!validate()` で分岐 |
+
+- **Result型**：エラー文字列の管理が一箇所にまとまる。検証と変換をセットで扱いたいときに向く
+- **true/false型**：シンプルで読みやすい。エラーメッセージを呼び出し側でコントロールしたいときに向く
+
+どちらも正解。「バリデーション関数が複数の責務を持つ＝悪い設計」ではなく、**切り離せない処理をまとめているなら一つの関数でよい**。
+
+**出典：** `study-app/react-practice/src/hooks/useBmiCalculator.ts` / `useScoreSort.ts`
