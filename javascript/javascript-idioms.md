@@ -14,8 +14,6 @@
 - 文字列を逆にする
 - 文字列→数値
 - 配列内の数値の要素を昇順に並べ替え
-- 配列の要素を並び替え（ドラッグドロップで UI を並べ替える時などに使用）
-- React での定番操作パターン
 - 関数の実行と関数の参照
 - ガード節（Guard Clause）
 - Result型パターン
@@ -196,52 +194,6 @@ console.log(arr) // [9, 12, 365, 1024]
 
 ---
 
-## 配列の要素を並び替え（ドラッグドロップで UI を並べ替える時などに使用）
-
-spliceは破壊的だからReactではコピーしてから使う
-
-```js
-  const reorderTodos = useCallback((activeId, overId) => {
-    setTodos((prev) => {
-      const oldIndex = prev.findIndex((todo) => todo.id === activeId); // 並べ替え対象となる TODO の index
-      const newIndex = prev.findIndex((todo) => todo.id === overId); // 順番変更対象となる TODO の index
-
-      if (oldIndex === -1 || newIndex === -1) return prev; // 該当する要素がなかった場合は現在の状態を返す
-
-      const newTodos = [...prev]; // 配列をコピー
-      const [removed] = newTodos.splice(oldIndex, 1); // splice で並べ替え対象を抜き取る
-      // newTodos = [ A, B, C, D ] とすると...
-      // splice(1, 1) → index1から1個取り出す
-      // removed = B
-      // const [removed] = の [] は分割代入。splice は取り出した要素を配列で返すので、その最初の1個を取り出している。
-      // newTodos = [ A, C, D ]  ← B が抜けた
-      newTodos.splice(newIndex, 0, removed); // 抜き取った B を newIndex の位置に差し込む
-      // splice(3, 0, B) → index3の位置に、0個削除して、Bを挿入
-      // newTodos = [ A, C, D, B ]
-      // before: [ A, B, C, D ] after:  [ A, C, D, B ]
-      // Bが末尾に移動した。配列の順番が変わったので、画面の表示順も変わる。
-
-      return newTodos;
-    });
-  }, []);
-```
-
----
-
-## React での定番操作パターン
-
-React では元のデータを直接変えず、新しいデータを作って差し替えるのが基本。
-
-| やりたいこと | Reactでの定番 | 理由 |
-|---|---|---|
-| 要素を削除 | `filter()` で除外した新しい配列を返す | 非破壊的 |
-| 要素を移動 | コピーしてから `splice` × 2回 | splice は破壊的なのでコピーが必須 |
-| 要素を更新 | `map()` で新しいオブジェクトに差し替え | 非破壊的 |
-
-**出典：** `hooks/useTodos.js`（Todo アプリ）
-
----
-
 ## 関数の実行と関数の参照
 
 `()` の有無で意味が変わる。
@@ -321,6 +273,7 @@ function validateUsername() {
 
 ```ts
 // 入力値検証、数値変換を行う関数
+// 各種バリデーションと数値変換をここ1箇所で行う
 function validateInputToInteger(value: string, max: number): { value: number } | { error: string } {
   if (value.trim() === '') return { error: '値を入力してください' }
   const num = Number(value)
@@ -347,6 +300,7 @@ export function useBmiCalculator() {
 一方、ハンドラーの中でエラーを返すパターン
 
 ```ts
+// バリデーションのみ、真偽を返す
 // 空文字バリデーション
 function validateNotEmpty(value:string) {
   if (value.trim() === '') {
@@ -355,6 +309,7 @@ function validateNotEmpty(value:string) {
   return true;
 }
 
+// バリデーションのみ、真偽を返す
 // 入力値バリデーション
 function validateScoreRange(value: string) {
   const parsedValue = parseInt(value, 10)
@@ -392,3 +347,46 @@ export function useScoreSort() {
 どちらも正解。「バリデーション関数が複数の責務を持つ＝悪い設計」ではなく、**切り離せない処理をまとめているなら一つの関数でよい**。
 
 **出典：** `study-app/react-practice/src/hooks/useBmiCalculator.ts` / `useScoreSort.ts`
+
+---
+
+## オブジェクトマップ
+
+キーと値のペアを持つオブジェクトを使って、**switch文の代わりに値を引き出す**テクニック。
+
+```tsx
+// switch で書くと…
+switch (showElement) {
+  case 'TaxCalculator':   return <TaxCalculator />
+  case 'BmiCalculator':   return <BmiCalculator />
+  case 'SplitCalculator': return <SplitCalculator />
+}
+
+// オブジェクトマップで書くと…
+const MAP = {
+  TaxCalculator:   <TaxCalculator />,
+  BmiCalculator:   <BmiCalculator />,
+  SplitCalculator: <SplitCalculator />,
+}
+
+MAP[showElement]  // showElement の値でオブジェクトを検索して取り出す
+```
+
+辞書で単語を引くように、**キーで値を一発検索できる**のがポイント。
+
+### switch文との比較
+
+| | switch文 | オブジェクトマップ |
+|---|---|---|
+| JSX内で使える | ❌（即時関数が必要） | ✅ |
+| コードの長さ | 長め | 短め |
+| 発想 | 条件分岐（上から順に比較） | 辞書引き（キーで直接取り出す） |
+
+### JSX内で switch が使えない理由
+
+JSX の `{ }` 内に書けるのは**式（expression）**のみ。`switch` は**文（statement）**なので構文エラーになる。  
+オブジェクトマップは `MAP[key]` という式なので JSX 内に直接書ける。
+
+**出典：** `study-app/react-practice/src/App.tsx`（成績ソートアプリ）
+
+---
