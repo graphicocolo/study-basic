@@ -29,9 +29,6 @@ ehthumbs.db
 Thumbs.db
 *.pem
 memo.md
-list-theme.md
-# drizzle.config.ts
-# /src/db
 
 # debug
 npm-debug.log*

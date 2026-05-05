@@ -103,6 +103,25 @@ async function dataDisplay () {
 dataDisplay()
 ```
 
+### コード基本例
+
+```js
+async function getData() {
+  const url = "https://example.org/products.json";
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`レスポンスステータス: ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log(result);
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+```
+
 ---
 
 ## 課題3：並列処理（応用）
