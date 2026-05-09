@@ -14,9 +14,11 @@
 - 文字列を逆にする
 - 文字列→数値
 - 配列内の数値の要素を昇順に並べ替え
+- 文字列 → 配列、配列 → 文字列の変換
 - 関数の実行と関数の参照
 - ガード節（Guard Clause）
 - Result型パターン
+- 分割代入・スプレッド構文・レスト構文
 
 ---
 
@@ -186,10 +188,20 @@ phase === 'work' ? 'text-work' : 'text-break'
 
 ```js
 const arr = [1024, 365, 12, 9]
-arr.sort((a, b) => {
-  return a - b
+// sort() は破壊的であることに注意
+const sortedArr = [...arr].sort((a, b) => {
+  return a - b // 昇順にソート
 })
-console.log(arr) // [9, 12, 365, 1024]
+console.log(sortedArr) // [9, 12, 365, 1024]
+```
+
+---
+
+## 文字列 → 配列、配列 → 文字列の変換
+
+```txt
+文字列.split(区切り文字) → 配列
+配列.join(区切り文字) → 文字列
 ```
 
 ---
@@ -390,3 +402,151 @@ JSX の `{ }` 内に書けるのは**式（expression）**のみ。`switch` は*
 **出典：** `study-app/react-practice/src/App.tsx`（成績ソートアプリ）
 
 ---
+
+## 分割代入・スプレッド構文・レスト構文
+
+### 分割代入（Destructuring Assignment）
+
+配列やオブジェクトから値を取り出して、変数に一括で代入する。
+
+**配列の分割代入**
+
+```js
+const colors = ["red", "green", "blue"];
+
+const [first, second] = colors;
+// first  → "red"
+// second → "green"
+```
+
+**オブジェクトの分割代入**
+
+```js
+const user = { name: "Alice", age: 25, role: "admin" };
+
+const { name, age } = user;
+// name → "Alice"
+// age  → 25
+```
+
+**別名をつける**
+
+```js
+const { name: userName } = user;
+// userName → "Alice"（変数名を name から userName に変更）
+```
+
+**デフォルト値を設定する**
+
+```js
+const { name, score = 0 } = user;
+// score プロパティがなければ 0 になる
+```
+
+**関数の引数でも使える**
+
+```js
+function greet({ name, age }) {
+  console.log(`${name}（${age}歳）`);
+}
+greet(user); // "Alice（25歳）"
+```
+
+---
+
+### スプレッド構文（Spread Syntax）
+
+配列・オブジェクトを「展開」して別の配列・オブジェクトや関数の引数に埋め込む。
+
+**配列の展開**
+
+```js
+const a = [1, 2, 3];
+const b = [0, ...a, 4];
+// b → [0, 1, 2, 3, 4]
+```
+
+**配列のコピー（参照を切り離す）**
+
+```js
+const original = [1, 2, 3];
+const copy = [...original];
+copy.push(4);
+// original → [1, 2, 3]（変わらない）
+// copy     → [1, 2, 3, 4]
+```
+
+**オブジェクトの展開**
+
+```js
+const base = { a: 1, b: 2 };
+const extended = { ...base, c: 3 };
+// extended → { a: 1, b: 2, c: 3 }
+```
+
+後から書いたプロパティで上書きされる（`clamp` や `useState` の更新でも使うパターン）。
+
+```js
+const updated = { ...base, b: 99 };
+// updated → { a: 1, b: 99 }
+```
+
+**関数の引数への展開**
+
+```js
+const nums = [3, 1, 4];
+Math.max(...nums); // → 4（Math.max(3, 1, 4) と同じ）
+```
+
+---
+
+### レスト構文（Rest Syntax）
+
+「残りをまとめて受け取る」構文。スプレッドと記号（`...`）は同じだが、**使う場所が逆**。
+
+- スプレッド：配列・オブジェクトを**展開する**
+- レスト：残りの要素を**まとめる**
+
+**関数の可変長引数**
+
+```js
+function sum(...nums) {
+  return nums.reduce((acc, n) => acc + n, 0);
+}
+sum(1, 2, 3, 4); // → 10（nums は [1, 2, 3, 4]）
+```
+
+**配列の分割代入と組み合わせる**
+
+```js
+const [first, ...rest] = [10, 20, 30, 40];
+// first → 10
+// rest  → [20, 30, 40]
+```
+
+**オブジェクトの分割代入と組み合わせる**
+
+```js
+const { name, ...others } = { name: "Alice", age: 25, role: "admin" };
+// name   → "Alice"
+// others → { age: 25, role: "admin" }
+```
+
+特定のプロパティだけ取り出して、残りをまとめたいときに使う。
+
+---
+
+### スプレッド vs レストの見分け方
+
+| 文脈 | 構文 | 意味 |
+|---|---|---|
+| 代入の**右辺** / 関数の**引数**として渡す | スプレッド | 展開する |
+| 代入の**左辺** / 関数の**仮引数**として受け取る | レスト | まとめる |
+
+```js
+const arr = [...[1, 2], 3];     // スプレッド：展開して配列を作る
+const [a, ...b] = [1, 2, 3];   // レスト：残りをまとめる
+function f(...args) {}          // レスト：引数をまとめて受け取る
+f(...arr);                      // スプレッド：配列を引数として展開する
+```
+
