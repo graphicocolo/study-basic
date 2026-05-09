@@ -1,5 +1,39 @@
 # JavaScript 配列
 
+## 配列の複製
+
+配列を別の変数に代入する時、配列への参照を代入することになる
+
+配列の実体は別にある
+
+参照を代入するだけでは、同じ実体を指してしまう
+
+```js
+const origin = ["one", "two", "three"];
+
+const arr = origin; // 参照を代入
+const arr2 = arr; // 参照を複製して代入
+arr[0] = "zero";
+console.log(origin); // [ 'zero', 'two', 'three' ]
+```
+
+配列の内容の複製を行うにはいくつか方法がある
+
+```js
+const origin = ["one", "two", "three"];
+
+// 参照先がそれぞれ別々になる
+const arr = [...origin]; // スプレッド構文
+const arr2 = origin.concat();
+const arr3 = origin.slice();
+
+origin[2] = "third";
+console.log(origin); // [ 'one', 'two', 'third' ]
+console.log(arr); // [ 'one', 'two', 'three' ]
+console.log(arr2); // [ 'one', 'two', 'three' ]
+console.log(arr3); // [ 'one', 'two', 'three' ]
+```
+
 ## 配列の操作
 
 ### 非破壊的配列操作メソッド
