@@ -34,6 +34,89 @@ console.log(arr2); // [ 'one', 'two', 'three' ]
 console.log(arr3); // [ 'one', 'two', 'three' ]
 ```
 
+### シャローコピー
+
+配列を複製すると参照だけが複製される
+
+参照のみの複製のため、元の参照と複製された参照の先にある実体は同一のものである
+
+参照のみの複製をシャローコピーという
+
+### ディープコピー
+
+参照の先も複製することをディープコピーという
+
+#### ディープコピーの方法
+
+**`JSON.parse(JSON.stringify(obj))`**
+
+```js
+const origin = { a: 1, b: { c: 2 } };
+const copy = JSON.parse(JSON.stringify(origin));
+
+copy.b.c = 99;
+console.log(origin.b.c); // 2 ← 影響なし
+```
+
+コピーできないもの：
+
+| 値 | 結果 |
+|---|---|
+| `Date` | 文字列に変換される |
+| `undefined` | プロパティごと消える |
+| 関数 | プロパティごと消える |
+| `Symbol` | プロパティごと消える |
+| 循環参照 | エラーになる |
+
+シンプルな数値・文字列・オブジェクトだけなら使える
+
+**`structuredClone()`**
+
+```js
+const origin = { a: 1, b: { c: 2 } };
+const copy = structuredClone(origin);
+
+copy.b.c = 99;
+console.log(origin.b.c); // 2 ← 影響なし
+
+// Date もちゃんとコピーされる
+const obj = { date: new Date() };
+const copy2 = structuredClone(obj);
+console.log(copy2.date instanceof Date); // true
+```
+
+`JSON` 方式より対応範囲が広い。コピーできないのは関数・`Symbol`・独自クラスのインスタンスのみ。
+ライブラリなしで使える現実的な第一選択肢。
+
+**`lodash.cloneDeep()`**
+
+```js
+import cloneDeep from 'lodash/cloneDeep';
+
+const origin = { fn: () => "hello", b: { c: 2 } };
+const copy = cloneDeep(origin);
+
+console.log(copy.fn()); // "hello" ← 関数もコピーされる
+```
+
+npm ライブラリとして lodash をインストールする必要がある。関数やクラスインスタンスも含む複雑なデータに対応。
+
+#### 選び方
+
+```
+シンプルなデータ（数値・文字列のみ）
+  → JSON.parse(JSON.stringify())
+
+Date や循環参照を含むが、関数はない
+  → structuredClone()  ← 迷ったらこれ
+
+関数・クラスインスタンスも含む
+  → lodash.cloneDeep()
+```
+
+- [Deep copy (ディープコピー)](https://developer.mozilla.org/ja/docs/Glossary/Deep_copy)
+- [Window: structuredClone() メソッド](https://developer.mozilla.org/ja/docs/Web/API/Window/structuredClone)
+
 ## 配列の操作
 
 ### 非破壊的配列操作メソッド
