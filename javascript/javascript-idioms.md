@@ -19,6 +19,7 @@
 - ガード節（Guard Clause）
 - Result型パターン
 - 分割代入・スプレッド構文・レスト構文
+- ファサード関数
 
 ---
 
@@ -550,3 +551,151 @@ function f(...args) {}          // レスト：引数をまとめて受け取る
 f(...arr);                      // スプレッド：配列を引数として展開する
 ```
 
+---
+
+## ファサード関数
+
+複雑な処理や複数の機能に対する「簡易的な窓口」となる関数を作成し、使い回す
+
+下記例の場合
+
+`createRankingTable` が「データ変換 → ソート → 描画」の流れを束ねる**ファサード関数**の役割を果たしている。イベントハンドラ側は `createRankingTable` を呼ぶだけで済み、処理の詳細を知らなくていい構造になっている。
+
+各関数が単一の責務を持っている。
+
+- `addRatioToData` → データ変換のみ
+- `sortByValueDescending` → ソートのみ
+- `renderTable` → 描画のみ
+
+これにより、たとえば「ソートのロジックを変えたい」ときに `sortByValueDescending` だけを修正すればよく、他に影響が出にくい。
+
+```js
+// 例: 男女比ランキング
+// 各関数の役割と関係
+// 比率計算 ratioCalculate() 男性総数もしくは女性総数 / 総数 * 100 の計算のみを行う
+// 比率追加 addRatioToData() ratioCalculate() を呼び出して結果を配列の末尾に追加
+//  - 比率計算 ratioCalculate()
+// ランキングテーブル作成 createRankingTable() 各関数を呼び出してランキングテーブルを作成 各関数のファサード関数 「データ変換 → ソート → 描画」の流れを束ねる
+//  - 比率追加 addRatioToData()
+//  - ソート sortByValueDescending()
+//  - テーブル描画 renderTable()
+
+/**
+ * 比率計算
+ * @param {string} part 分子
+ * @param {string} total 分母
+ * @returns {string} 比率（小数点以下1桁）
+ */
+function ratioCalculate (part, total) {
+  const ratio = (parseInt(part, 10) / parseInt(total, 10)) * 100;
+  return ratio.toFixed(1);
+}
+
+/**
+ * 比率追加
+ * @param {Array} array 配列データ
+ * @returns {Array} 比率追加後の配列
+ */
+function addRatioToData (array) {
+  return [...array].map((item) => {
+    const totalPopulation = item[2];
+    const malePopulation = item[3];
+    const femalePopulation = item[4];
+    const maleRatio = ratioCalculate(malePopulation, totalPopulation);
+    const femaleRatio = ratioCalculate(femalePopulation, totalPopulation);
+    return [...item, maleRatio, femaleRatio];
+  });
+}
+
+/**
+ * ソート
+ * @param {Array} array 配列データ
+ * @param {number} index ソート対象のインデックス
+ * @returns {Array} ソート後の配列
+ */
+function sortByValueDescending (array, index) {
+  const sortedArray = [...array].sort((a, b) => b[index] - a[index]);
+  return sortedArray;
+}
+
+/**
+ * テーブル描画
+ * @param {Array} sortedArray ソート後の配列データ
+ * @param {number} ratioIndex 比率インデックス 1: 男性比率 2: 女性比率
+ */
+function renderTable (sortedArray, ratioIndex) {
+  const tableElement = document.createElement("table");
+  tableElement.setAttribute("class", "mt-4 table-auto w-full text-center");
+  const headerRow = document.createElement("tr");
+  headerRow.setAttribute("class", "bg-gray-200");
+  const rankHeader = document.createElement("th");
+  rankHeader.setAttribute("class", "p-2");
+  rankHeader.textContent = "順位";
+  const areaHeader = document.createElement("th");
+  areaHeader.setAttribute("class", "p-2");
+  areaHeader.textContent = "都道府県名";
+  const ratioHeader = document.createElement("th");
+  ratioHeader.setAttribute("class", "p-2");
+  ratioHeader.textContent = "比率";
+  headerRow.append(rankHeader, areaHeader, ratioHeader);
+  tableElement.appendChild(headerRow);
+  result.appendChild(tableElement);
+  sortedArray.forEach((item, index) => {
+    const row = document.createElement("tr");
+    row.setAttribute("class", "border-b border-gray-200")
+    const rankCell = document.createElement("td");
+    rankCell.setAttribute("class", "p-2");
+    const areaCell = document.createElement("td");
+    areaCell.setAttribute("class", "p-2");
+    const ratioCell = document.createElement("td");
+    ratioCell.setAttribute("class", "p-2");
+    rankCell.textContent = `${index + 1}位`;
+    areaCell.textContent = item[0];
+    if (ratioIndex === 1) {
+      ratioCell.textContent = `${item[7]}%`;
+    } else {
+      ratioCell.textContent = `${item[8]}%`;
+    }
+    row.append(rankCell, areaCell, ratioCell);
+    tableElement.appendChild(row);
+  });
+}
+
+/**
+ * ランキングテーブル作成
+ * @param {Array} array 配列データ
+ * @param {number} index ソート対象のインデックス
+ * @param {number} ratioIndex 比率インデックス 1: 男性比率 2: 女性比率
+ */
+function createRankingTable (array, index, ratioIndex) {
+  if (result.hasChildNodes()) result.replaceChildren();
+
+  const ratioAddedData = addRatioToData(array);
+  const sortedData = sortByValueDescending(ratioAddedData, index);
+  const title = document.createElement("h2");
+  title.setAttribute("class", "text-lg font-bold mb-6 text-center pt-8");
+  result.appendChild(title);
+  if (ratioIndex === 1) {
+    title.textContent = "男性比率ランキング";
+  } else if (ratioIndex === 2) {
+    title.textContent = "女性比率ランキング";
+  }
+  renderTable(sortedData, ratioIndex);
+}
+
+// ハンドラの中で使用
+let censusData = null; // await はトップレベルでは（モジュール形式でない場合）使えないため、変数を宣言するだけ
+window.addEventListener("DOMContentLoaded", async () => {
+  censusData = await fetchCensusData(); // ここでデータ取得 以降データ使い回し
+  createRankingTable(censusData, MALE_RATIO_INDEX, MALE_RATIO);
+});
+
+// 6. ボタンがクリックされたときの処理
+maleRankingButton.addEventListener("click", () => {
+  createRankingTable(censusData, MALE_RATIO_INDEX, MALE_RATIO);
+});
+
+femaleRankingButton.addEventListener("click", () => {
+  createRankingTable(censusData, FEMALE_RATIO_INDEX, FEMALE_RATIO);
+});
+```
