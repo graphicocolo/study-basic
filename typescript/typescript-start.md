@@ -15,9 +15,23 @@ TypeScript の開発環境を構築する方法はいくつかあります。代
 ```sh
 mkdir my-ts-project
 cd my-ts-project
+# package.json を作成
 npm init -y
-npm install --save-dev typescript
+# 必要パッケージをインストール
+# typescript — TypeScript 本体（型チェック・コンパイル）
+# tsx — .ts ファイルをそのまま実行できるツール（ts-node より高速で設定が楽）
+npm install --save-dev typescript tsx
+# tsconfig.json を作成
 npx tsc --init
+```
+
+### **使い方**
+
+```zsh
+# .ts ファイルを直接実行
+npx tsx hello.ts
+
+# コンパイルして .js を生成する必要がなく、tsx ファイル名 で即実行できるので学習に向いています。
 ```
 
 ### **特徴**
