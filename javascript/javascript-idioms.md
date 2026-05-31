@@ -19,7 +19,10 @@
 - ガード節（Guard Clause）
 - Result型パターン
 - 分割代入・スプレッド構文・レスト構文
-- ファサード関数
+- ボタンを押したら送信、でも連打防止
+- 一定時間操作がなければ自動ログアウト
+- リアルタイム時計（ストップウォッチにも応用できる）
+- デバウンス（検索ボックスでよく使う）
 
 ---
 
@@ -697,5 +700,87 @@ maleRankingButton.addEventListener("click", () => {
 
 femaleRankingButton.addEventListener("click", () => {
   createRankingTable(censusData, FEMALE_RATIO_INDEX, FEMALE_RATIO);
+});
+```
+
+---
+
+## ボタンを押したら送信、でも連打防止
+
+```js
+let isSending = false;
+
+document.getElementById("btn").addEventListener("click", () => {
+  if (isSending) return; // 送信中は無視
+
+  isSending = true;
+  console.log("送信中...");
+
+  // 2秒後に送信完了（実際はAPIリクエストが終わったら）
+  setTimeout(() => {
+    console.log("送信完了！");
+    isSending = false; // また押せるようにする
+  }, 2000);
+});
+```
+
+---
+
+## 一定時間操作がなければ自動ログアウト
+
+```js
+let logoutTimer;
+
+function resetTimer() {
+  clearTimeout(logoutTimer); // 前のタイマーをリセット
+  logoutTimer = setTimeout(() => {
+    console.log("5分間操作がないのでログアウトします");
+  }, 5 * 60 * 1000); // 5分
+}
+
+// マウスやキーが動くたびにタイマーをリセット
+document.addEventListener("mousemove", resetTimer);
+document.addEventListener("keypress", resetTimer);
+
+resetTimer(); // 最初に起動
+```
+
+---
+
+## リアルタイム時計（ストップウォッチにも応用できる）
+
+```js
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours().toString().padStart(2, "0");
+  const m = now.getMinutes().toString().padStart(2, "0");
+  const s = now.getSeconds().toString().padStart(2, "0");
+  document.getElementById("clock").textContent = `${h}:${m}:${s}`;
+}
+
+// 1秒ごとに時計を更新
+const clockTimer = setInterval(updateClock, 1000);
+updateClock(); // 最初の1秒を待たずに即表示
+
+// ページを離れるときに止める（メモリリーク防止）
+window.addEventListener("beforeunload", () => {
+  clearInterval(clockTimer);
+});
+```
+
+---
+
+## デバウンス（検索ボックスでよく使う）
+
+```js
+// 入力のたびにAPIを叩くと重いので、「入力が止まってから0.5秒後」に実行する
+let searchTimer;
+
+document.getElementById("search").addEventListener("input", (e) => {
+  clearTimeout(searchTimer); // 入力のたびにリセット
+
+  searchTimer = setTimeout(() => {
+    console.log(`「${e.target.value}」で検索`); // 0.5秒止まったら実行
+  }, 500);
 });
 ```
