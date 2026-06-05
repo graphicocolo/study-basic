@@ -110,6 +110,8 @@ let bnNum = Math.floor(3 * Math.random());
 
 ### `Math.ceil(2 * Math.random())` と `Math.floor(2 * Math.random())` の使い分け
 
+`Math.floor()` は切り捨て、`Math.ceil()` は切り上げ
+
 | | 出る値（×2の場合） | 開始 |
 |---|---|---|
 | `Math.ceil` | 1, 2 | 1始まり |
