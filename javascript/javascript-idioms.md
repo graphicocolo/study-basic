@@ -108,6 +108,40 @@ let bnNum = Math.floor(3 * Math.random());
 
 `Math.random()` が `[0, 3)` になり、`Math.floor`（切り捨て）で `0`, `1`, `2` が均等に出る。
 
+### `Math.ceil(2 * Math.random())` と `Math.floor(2 * Math.random())` の使い分け
+
+| | 出る値（×2の場合） | 開始 |
+|---|---|---|
+| `Math.ceil` | 1, 2 | 1始まり |
+| `Math.floor` | 0, 1 | 0始まり |
+
+**`Math.ceil` が向くケース：1始まりの番号が必要なとき**
+
+CSSクラス名や人間が読む番号など、0を使いたくない場面。
+
+```js
+// background1, background2 を出したい → Math.ceil が自然
+const bnNum = Math.ceil(2 * Math.random());
+element.classList.add(`background${bnNum}`); // background0 は出ない
+
+// サイコロ（1〜6）
+const dice = Math.ceil(6 * Math.random()); // 1, 2, 3, 4, 5, 6
+```
+
+**`Math.floor` が向くケース：0始まりのインデックスが必要なとき**
+
+配列のインデックス参照など、プログラム的に0から始まる場面。
+
+```js
+// 配列のランダムな要素を取り出す → Math.floor が自然
+const items = ['りんご', 'みかん', 'ぶどう'];
+const item = items[Math.floor(items.length * Math.random())];
+// items[0], items[1], items[2] → 3つすべてに均等にアクセスできる
+```
+
+- **表示・見た目に関わる番号（CSSクラス、ラベルなど）** → `Math.ceil`（1始まり）
+- **配列のインデックスなどプログラム内部の処理** → `Math.floor`（0始まり）
+
 ---
 
 ## オブジェクトの一部だけ変えてコピーする
@@ -863,8 +897,8 @@ document.getElementById("search").addEventListener("input", (e) => {
 	const bnrElms = document.getElementsByClassName('bn-float');
 	const linkElms = document.getElementsByClassName('linkBtn');
 	const btnElms = document.getElementsByClassName('closeBtn');
-  let bnNum = Math.ceil(2 * Math.random());
-  bnrElms[0].classList.add(`background${bnNum}`);
+  let bgNum = Math.ceil(2 * Math.random());
+  bnrElms[0].classList.add(`background${bgNum}`);
   const keyName = 'element_float';
   const keyValue = true;
   function hideBanner () {
@@ -884,3 +918,51 @@ document.getElementById("search").addEventListener("input", (e) => {
   });
 </script>
 ```
+
+### 同様の機能の別の実装方法
+
+**① CSS クラスの付け外し（推奨）**
+
+現状はインライン `style` を直接操作しているが、クラスで管理する方がCSSとJSの役割が分かれて読みやすい。
+
+```css
+/* CSS */
+.bn-float { display: none; }
+.bn-float.is-visible { display: block; }
+```
+
+```js
+// 表示
+bnrElms[0].classList.add('is-visible');
+// 非表示（削除ではなくクラスを外すだけ）
+bnrElms[0].classList.remove('is-visible');
+```
+
+**② `hidden` 属性（セマンティックなHTML）**
+
+`style` の代わりに HTML の `hidden` 属性を使う方法。`remove()` の代わりに `hidden = true` で消すことで、DOMに要素を残したまま非表示にできる。
+
+```js
+// 表示
+bnrElms[0].hidden = false;
+// 非表示
+bnrElms[0].hidden = true;
+```
+
+**③ localStorage（タブを閉じても維持したい場合）**
+
+`sessionStorage` はタブを閉じるとリセットされる。「一度閉じたら次回ブラウザを開いても表示しない」仕様にしたい場合は `localStorage` に変えるだけ。
+
+```js
+localStorage.setItem(keyName, keyValue);
+localStorage.getItem(keyName);
+```
+
+**仕様に合わせた選び方：**
+
+| 仕様 | 方法 |
+|---|---|
+| タブを閉じたらリセットしたい | `sessionStorage`（現状） |
+| ブラウザを閉じても維持したい | `localStorage` |
+| CSSとJSを分離したい | CSS クラス切り替え |
+| DOMに残したまま隠したい | `hidden` 属性 |
