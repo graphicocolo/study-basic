@@ -5,6 +5,7 @@
 ---
 
 - 値を MIN〜MAX の範囲に収める（clamp）
+- 限られた整数値をランダムに算出
 - オブジェクトの一部だけ変えてコピーする
 - 数値変換できなければ 0 にする
 - null/undefined チェックしながら関数を呼ぶ（オプショナルチェーン呼び出し）
@@ -23,6 +24,7 @@
 - 一定時間操作がなければ自動ログアウト
 - リアルタイム時計（ストップウォッチにも応用できる）
 - デバウンス（検索ボックスでよく使う）
+- セッションストレージを利用して特定条件下で要素を非表示
 
 ---
 
@@ -44,6 +46,67 @@ return value
 ```
 
 **出典：** `components/settings/TimeSettings.tsx`（ポモドーロタイマー）
+
+---
+
+## 限られた整数値をランダムに算出
+
+```js
+// 1, 2 がランダムに算出
+// かける数 = 出したい整数の最大値
+// 0 は出る確率がほぼ0%なので実質 1, 2 がランダムに算出される
+const limitedInteger1 = Math.ceil(2 * Math.random());
+
+// 0, 1 がランダムに算出
+// かける数 = 出るパターンの個数、0〜(かける数-1) の範囲が出る
+const limitedInteger2 = Math.floor(2 * Math.random());
+```
+
+`Math.ceil(2 * Math.random())` について
+
+**`Math.random()`**
+
+`0` 以上 `1` 未満の小数をランダムに返す。
+例：`0.0`, `0.312...`, `0.999...` など（`1` は含まれない）
+
+**`2 * Math.random()`**
+
+`0` 以上 `2` 未満の小数になる。
+例：`0.0`, `0.624...`, `1.998...` など
+
+Math.random() は `[0, 1]` までしか出ません。そのままでは 1 以上の数が出ないため、2 をかけて `[0, 2]` の範囲に引き伸ばしています。
+
+- Math.random()     →  [0, 1)  →  Math.ceil すると 0 or 1
+- 2 * Math.random() →  [0, 2)  →  Math.ceil すると 0 or 1 or 2
+- 3 * Math.random() →  [0, 3)  →  Math.ceil すると 0 or 1 or 2 or 3
+
+かける数 = 出したい整数の最大値というイメージです。
+
+**`Math.ceil(...)`**
+
+小数を**切り上げ**て整数にする。「その数以上の最小の整数」を返す。
+例：`Math.ceil(0.1)` → `1`、`Math.ceil(1.9)` → `2`、`Math.ceil(0)` → `0`
+
+0 → 0 以上の整数で一番小さいのは 0 → 0（ぴったり整数のときだけ変わらない）
+
+実際に出る値：
+
+| `2 * Math.random()` の範囲 | `Math.ceil` の結果 |
+|---|---|
+| ちょうど `0`（確率ほぼ0） | `0` |
+| `(0, 1]` | `1` |
+| `(1, 2)` | `2` |
+
+`Math.random()` がちょうど `0` を返す確率は理論上ゼロに近いため、実質的に `1` か `2` しか出ない。`0` はほぼ生成されない。
+
+**0〜2の範囲とするには `Math.floor` を使う：**
+
+```js
+// 0, 1, 2 をそれぞれ約1/3の確率で生成する
+let bnNum = Math.floor(3 * Math.random());
+```
+
+`Math.random()` が `[0, 3)` になり、`Math.floor`（切り捨て）で `0`, `1`, `2` が均等に出る。
 
 ---
 
@@ -783,4 +846,41 @@ document.getElementById("search").addEventListener("input", (e) => {
     console.log(`「${e.target.value}」で検索`); // 0.5秒止まったら実行
   }, 500);
 });
+```
+
+---
+
+## セッションストレージを利用して特定条件下で要素を非表示
+
+```html
+<!-- style="display:none;" でページ読み込み時の一瞬の表示を防ぐ（フラッシュ防止） -->
+<div class="bn-float" style="display:none;">
+  <a href="..." target="_blank" class="linkBtn">...</a>
+  ...
+</div>
+<button class="closeBtn">...</button>
+<script>
+	const bnrElms = document.getElementsByClassName('bn-float');
+	const linkElms = document.getElementsByClassName('linkBtn');
+	const btnElms = document.getElementsByClassName('closeBtn');
+  let bnNum = Math.ceil(2 * Math.random());
+  bnrElms[0].classList.add(`background${bnNum}`);
+  const keyName = 'element_float';
+  const keyValue = true;
+  function hideBanner () {
+    sessionStorage.setItem(keyName, keyValue);
+    bnrElms[0].remove();
+  }
+  if (!sessionStorage.getItem(keyName)) {
+    bnrElms[0].style.display = "block";
+  }
+  linkElms[0].addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideBanner();
+  });
+  btnElms[0].addEventListener('click', (e) => {
+    e.stopPropagation();
+    hideBanner();
+  });
+</script>
 ```
