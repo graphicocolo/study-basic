@@ -25,6 +25,7 @@
 - リアルタイム時計（ストップウォッチにも応用できる）
 - デバウンス（検索ボックスでよく使う）
 - セッションストレージを利用して特定条件下で要素を非表示
+- 日付と時刻関連
 
 ---
 
@@ -968,3 +969,59 @@ localStorage.getItem(keyName);
 | ブラウザを閉じても維持したい | `localStorage` |
 | CSSとJSを分離したい | CSS クラス切り替え |
 | DOMに残したまま隠したい | `hidden` 属性 |
+
+---
+
+## 日付と時刻関連
+
+### ゼロ埋め（01, 09 などの2桁表示）
+
+```js
+const month = String(d.getMonth() + 1).padStart(2, '0');  // "06"
+const day   = String(d.getDate()).padStart(2, '0');        // "15"
+```
+
+### YYYY-MM-DD 形式の文字列を作る
+
+```js
+const d = new Date();
+const yyyymmdd = d.toISOString().slice(0, 10);
+// → "2024-06-15"（UTCベースなので日本時間とずれる場合あり）
+
+// 日本時間で確実に取得したい場合
+const yyyy = d.getFullYear();
+const mm   = String(d.getMonth() + 1).padStart(2, '0');
+const dd   = String(d.getDate()).padStart(2, '0');
+const dateStr = `${yyyy}-${mm}-${dd}`;  // "2024-06-15"
+```
+
+### N日後・N日前の日付を求める
+
+```js
+const d = new Date();
+d.setDate(d.getDate() + 7);   // 7日後（setDate は月をまたいでも自動調整）
+d.setDate(d.getDate() - 3);   // 3日前
+```
+
+### 月の末日を求める
+
+```js
+// 翌月の0日目 = 今月の末日
+const lastDay = new Date(2024, 2, 0).getDate();  // 29（2024年2月の末日）
+```
+
+### 経過時間の計測（処理時間など）
+
+```js
+const start = Date.now();
+// ...何らかの処理...
+const elapsed = Date.now() - start;  // ミリ秒
+console.log(`${elapsed}ms`);
+```
+
+### 曜日名を取得する
+
+```js
+const days = ['日', '月', '火', '水', '木', '金', '土'];
+const dayName = days[new Date().getDay()];  // "土"
+```
