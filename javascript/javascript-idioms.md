@@ -26,6 +26,7 @@
 - デバウンス（検索ボックスでよく使う）
 - セッションストレージを利用して特定条件下で要素を非表示
 - 日付と時刻関連
+- データ駆動バリデーション（ルールを配列で管理する）
 
 ---
 
@@ -1025,3 +1026,57 @@ console.log(`${elapsed}ms`);
 const days = ['日', '月', '火', '水', '木', '金', '土'];
 const dayName = days[new Date().getDay()];  // "土"
 ```
+
+---
+
+## データ駆動バリデーション（ルールを配列で管理する）
+
+「ルール（データ）」と「実行ロジック」を分離するパターン。ルールが増えても実行ロジックを変更しなくてよい。
+
+### 複数の関数を作るアプローチ（よくある）
+
+```js
+function checkNotEmpty(email) { ... }
+function checkMaxLength(email) { ... }
+function checkHasAt(email) { ... }
+
+function validateEmail(email) {
+  const r1 = checkNotEmpty(email);
+  if (!r1.valid) return r1;
+  const r2 = checkMaxLength(email);
+  if (!r2.valid) return r2;
+  // ルールが増えるたびにここも増える
+}
+```
+
+ルールが増えるたびに `validateEmail` 本体も修正が必要になる。
+
+### データ駆動アプローチ
+
+```js
+const rules = [
+  { test: (email) => email.length > 0,    message: "入力してください" },
+  { test: (email) => email.length <= 254, message: "254文字以内で..." },
+  { test: (email) => email.includes("@"), message: "@を含めてください" },
+  // ルールを追加してもここだけ変えればいい
+];
+
+function validateEmail(email) {
+  for (const rule of rules) {
+    if (!rule.test(email)) return { valid: false, error: rule.message };
+  }
+  return { valid: true };
+}
+```
+
+`validateEmail` は「`rules` を順番に回して最初に失敗したものを返す」だけに専念しており、ルールの追加・削除に対して変更不要。
+
+### ポイント
+
+| | 複数関数アプローチ | データ駆動アプローチ |
+|---|---|---|
+| ルール追加時 | 実行関数も修正が必要 | `rules` 配列に1行追加するだけ |
+| 実行ロジック | ルールごとに書く | 1つの `for` ループで完結 |
+| 発想 | 処理を関数として定義 | ルールをデータとして定義 |
+
+**出典：** `study-reading/misc/typescript/email-validation.ts`
