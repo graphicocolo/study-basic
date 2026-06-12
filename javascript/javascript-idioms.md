@@ -19,10 +19,13 @@
 - 関数の実行と関数の参照
 - ガード節（Guard Clause）
 - Result型パターン
+- オブジェクトマップ
 - 分割代入・スプレッド構文・レスト構文
 - ボタンを押したら送信、でも連打防止
+- `disabled` ボタンの状態管理
 - 一定時間操作がなければ自動ログアウト
 - リアルタイム時計（ストップウォッチにも応用できる）
+- ストップウォッチの時刻文字表示揺れ対応（ミリ秒表示で画面文字が揺れる）
 - デバウンス（検索ボックスでよく使う）
 - セッションストレージを利用して特定条件下で要素を非表示
 - 日付と時刻関連
@@ -827,6 +830,24 @@ document.getElementById("btn").addEventListener("click", () => {
 
 ---
 
+## `disabled` ボタンの状態管理
+
+```js
+// ボタン状態管理関数
+function setButtonState(state) {
+  startButton.disabled = state === "measuring" || state === "maxTime";
+  stopButton.disabled = state === "initial" || state === "stopped" || state === "maxTime";
+  resetButton.disabled = state === "initial";
+}
+
+startButton.addEventListener("click", () => {
+  ...
+  setButtonState("measuring"); // startButton の disabled を true に
+});
+```
+
+---
+
 ## 一定時間操作がなければ自動ログアウト
 
 ```js
@@ -867,6 +888,19 @@ updateClock(); // 最初の1秒を待たずに即表示
 window.addEventListener("beforeunload", () => {
   clearInterval(clockTimer);
 });
+```
+
+---
+
+## ストップウォッチの時刻文字表示揺れ対応（ミリ秒表示で画面文字が揺れる）
+
+```css
+font-variant-numeric: tabular-nums;
+```
+
+```html
+<!-- Tailwind CSS -->
+<span id="minute" class="tabular-nums"></span>
 ```
 
 ---
