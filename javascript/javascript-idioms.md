@@ -16,6 +16,10 @@
 - 文字列→数値
 - 配列内の数値の要素を昇順に並べ替え
 - 文字列 → 配列、配列 → 文字列の変換
+- 配列の値を一つにまとめる
+  - 配列の要素の合計値を求める
+  - 配列の要素の最大値を求める
+- 配列の数値の重複を削除する
 - 関数の実行と関数の参照
 - ガード節（Guard Clause）
 - Result型パターン
@@ -310,6 +314,78 @@ console.log(sortedArr) // [9, 12, 365, 1024]
 ```txt
 文字列.split(区切り文字) → 配列
 配列.join(区切り文字) → 文字列
+```
+
+---
+
+## 配列の値を一つにまとめる
+
+### 配列の要素の合計値を求める
+
+```ts
+type ArrayDatas<T> = Array<T>;
+const numbers: ArrayDatas<number> = [1, 2, 3, 4, 5];
+
+function addNumbersWithForOf (numbers: ArrayDatas<number>): number {
+  let sum = 0;
+  for (const n of numbers) {
+    sum += n;
+  }
+  return sum;
+}
+console.log(addNumbersWithForOf(numbers));
+
+function addNumbersWithForEach (numbers: ArrayDatas<number>): number {
+  let result = 0;
+  numbers.forEach((n) => {
+    result += n;
+  });
+  return result;
+}
+console.log(addNumbersWithForEach(numbers));
+
+// reduce 配列を1つの値にまとめる処理（合計・最大など）
+// acc → 累積値 num → 今の要素
+// acc + num の結果が次の回の acc として引き継がれていきます。最終的に返ってきた 15 が sum に入ります。
+function addNumbersWithReduce (numbers: ArrayDatas<number>): number {
+  let sum: number = numbers.reduce((acc, n) => acc + n, 0);
+  return sum;
+}
+console.log(addNumbersWithReduce(numbers));
+```
+
+### 配列の要素の最大値を求める
+
+```ts
+type ArrayDatas<T> = Array<T>;
+const numbers: ArrayDatas<number> = [1, 2, 3, 4, 5];
+
+//  -Infinity … 負の無限大（Number.NEGATIVE_INFINITY）
+//  Infinity … 正の無限大（Number.POSITIVE_INFINITY）
+function getNumberWithReduce (numbers: ArrayDatas<number>): number {
+  // let result = numbers.reduce((a, b) => a > b ? a : b); // これでもOK
+  let result = numbers.reduce((a, b) => Math.max(a, b), -Infinity); // 初期値を0にすると配列に負数がある場合に正しい最大値が返らない
+  return result;
+}
+console.log(getNumberWithReduce(numbers));
+```
+
+---
+
+## 配列の数値の重複を削除する
+
+```ts
+const duplicatedNumbers: ArrayDatas<number> = [1, 2, 2, 3, 4, 4, 5]
+
+function deleteDuplicationItemInArrayWithSet (numbers: ArrayDatas<number>): ArrayDatas<number> {
+  return [...new Set(numbers)]
+}
+console.log(deleteDuplicationItemInArrayWithSet(duplicatedNumbers))
+
+function deleteDuplicationItemInArrayWithFilter (numbers: ArrayDatas<number>): ArrayDatas<number> {
+  return numbers.filter((item, index) => index === numbers.indexOf(item));
+}
+console.log(deleteDuplicationItemInArrayWithFilter(duplicatedNumbers));
 ```
 
 ---
