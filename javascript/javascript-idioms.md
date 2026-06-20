@@ -20,6 +20,7 @@
   - 配列の要素の合計値を求める
   - 配列の要素の最大値を求める
 - 配列の数値の重複を削除する
+- 指定した数の入った配列を作成
 - 関数の実行と関数の参照
 - ガード節（Guard Clause）
 - Result型パターン
@@ -386,6 +387,15 @@ function deleteDuplicationItemInArrayWithFilter (numbers: ArrayDatas<number>): A
   return numbers.filter((item, index) => index === numbers.indexOf(item));
 }
 console.log(deleteDuplicationItemInArrayWithFilter(duplicatedNumbers));
+```
+
+---
+
+## 指定した数の入った配列を作成
+
+```js
+// 1〜100 の配列を作る
+const numbers = Array.from({ length: 100 }, (_, i) => i + 1);
 ```
 
 ---
