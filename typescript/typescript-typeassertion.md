@@ -4,6 +4,10 @@
 
 [型アサーション「as」(type assertion)](https://typescriptbook.jp/reference/values-types-variables/type-assertion-as)
 
+`!` を使う、非Nullアサーションもある
+
+[非Nullアサーション](https://typescriptbook.jp/reference/values-types-variables/definite-assignment-assertion#非nullアサーション)
+
 ## 型アサーションは避けるべきか
 
 TypeScript の型アサーション（`as Type`または`<Type>value`）は、**可能な限り避けるべき**ですが、**特定の状況では必要不可欠**なツールです。
