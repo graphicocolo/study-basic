@@ -386,6 +386,12 @@ console.log(deleteDuplicationItemInArrayWithSet(duplicatedNumbers))
 function deleteDuplicationItemInArrayWithFilter (numbers: ArrayDatas<number>): ArrayDatas<number> {
   return numbers.filter((item, index) => index === numbers.indexOf(item));
 }
+// indexOf は常に「最初に見つかったインデックス」を返す
+// つまり、ある値についてはnumbers.indexOf(item)は普遍のインデックス値
+// [10, 20, 20, 30] で考えてみる
+// - 1個目の 20（index=1）→ indexOf(20) も 1 → 一致 → 残る
+// - 2個目の 20（index=2）→ indexOf(20) は まだ 1 → 不一致 → 捨てられる
+// つまり「自分が最初の出現か？」を判定していて、2回目以降の重複は false になって除外される仕組み
 console.log(deleteDuplicationItemInArrayWithFilter(duplicatedNumbers));
 ```
 
