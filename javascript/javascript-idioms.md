@@ -35,6 +35,9 @@
 - セッションストレージを利用して特定条件下で要素を非表示
 - 日付と時刻関連
 - データ駆動バリデーション（ルールを配列で管理する）
+- DOM 操作
+  - ボタンをクリックすると、対応するコンテンツだけが表示されるタブUI
+  - モーダル(開くボタンと閉じるボタンあり、背景クリックでも閉じる)
 
 ---
 
@@ -1206,3 +1209,73 @@ function validateEmail(email) {
 | 発想 | 処理を関数として定義 | ルールをデータとして定義 |
 
 **出典：** `study-reading/misc/typescript/email-validation.ts`
+
+---
+
+## DOM 操作
+
+### ボタンをクリックすると、対応するコンテンツだけが表示されるタブUI
+
+クラス名でループ `forEach()` を回して、カスタムデータ属性とid値を照合して対応コンテンツを絞り込む
+
+```html
+    <section class="mb-6 pb-4 border-b-1 border-b-gray-200">
+      <div class="flex gap-x-2 justify-center mb-2">
+        <button type="button" data-tab="tab1" class="btn btn-primary font-bold text-base bg-sky-600 tab">タブ1を表示</button>
+        <button type="button" data-tab="tab2" class="btn btn-primary font-bold text-base bg-sky-600 tab">タブ2を表示</button>
+        <button type="button" data-tab="tab3" class="btn btn-primary font-bold text-base bg-sky-600 tab">タブ3を表示</button>
+      </div>
+      <div id="tab1" class="bg-sky-100 h-24 text-center pt-8 tab-content">タブ1の内容</div>
+      <div id="tab2" class="bg-green-100 h-24 text-center pt-8 tab-content hidden">タブ2の内容</div>
+      <div id="tab3" class="bg-indigo-100 h-24 text-center pt-8 tab-content hidden">タブ3の内容</div>
+    </section>
+```
+
+```js
+const tabButtons = document.querySelectorAll(".tab");
+const tabContents = document.querySelectorAll(".tab-content");
+tabButtons.forEach((tabButton) => {
+  tabButton.addEventListener("click", () => {
+    const target = tabButton.dataset.tab;
+    tabContents.forEach((tabContent) => tabContent.classList.add("hidden"));
+    document.getElementById(target).classList.remove("hidden");
+  });
+});
+```
+
+### モーダル(開くボタンと閉じるボタンあり、背景クリックでも閉じる)
+
+```html
+    <section class="mb-6 pb-4 border-b-1 border-b-gray-200">
+      <button type="button" id="openModal" class="btn btn-primary font-bold text-base bg-sky-600">モーダルを開く</button>
+      <div id="wrapModal" class="modal fixed inset-0 bg-gray-500/50 flex justify-center items-center hidden">
+        <div class="modal-content bg-white px-14 py-8 rounded-md text-center">
+          <p class="text-center mb-2">モーダル表示</p>
+          <button type="button" id="closeModal" class="btn btn-primary font-bold text-sm bg-gray-600">閉じる</button>
+        </div>
+      </div>
+    </section>
+```
+
+```js
+/** @type {HTMLDivElement | null} */
+const modalWrap = document.getElementById("wrapModal");
+/** @type {HTMLButtonElement | null} */
+const modalOpenButton = document.getElementById("openModal");
+/** @type {HTMLButtonElement | null} */
+const modalCloseButton = document.getElementById("closeModal");
+
+modalOpenButton.addEventListener("click", () => {
+  modalWrap.classList.remove("hidden");
+});
+modalCloseButton.addEventListener("click", () => {
+  modalWrap.classList.add("hidden");
+});
+// イベントのターゲットとmodalWrapの同一チェックがポイント
+// これがないと modal-content クラスを持つ要素をクリックしてもモーダルが閉じてしまう
+modalWrap.addEventListener("click", (e) => {
+  if (e.target === modalWrap) {
+    modalWrap.classList.add("hidden");
+  }
+});
+```
