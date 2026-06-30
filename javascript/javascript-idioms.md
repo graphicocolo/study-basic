@@ -22,6 +22,7 @@
 - 配列の数値の重複を削除する
 - 指定した数の入った配列を作成
 - 関数の実行と関数の参照
+- 関数を返す関数
 - ガード節（Guard Clause）
 - Result型パターン
 - オブジェクトマップ
@@ -442,6 +443,80 @@ input.addEventListener("blur", validateUsername);
 ```
 
 `()` は「実行する」という命令記号というイメージ
+
+---
+
+## 関数を返す関数
+
+「設定や文脈を外側の関数で受け取り、それを使う処理を内側の関数として返す」パターン。
+
+返り値の型は `(引数の型) => 返り値の型` という関数の形で書く。
+
+```typescript
+// 通常：返り値が値
+function greet(name: string): string {
+  return "こんにちは " + name;
+}
+
+// 関数を返す：返り値が関数
+function createGreeter(prefix: string): (name: string) => string {
+  return (name) => prefix + name;
+}
+
+const hello = createGreeter("こんにちは ");
+hello("田中"); // "こんにちは 田中"
+```
+
+### ユースケース
+
+共通のパターン：「設定や文脈を外側の関数で受け取り、それを使う処理を内側の関数として返す」という形。「どんなルールか」を外側で受け取り「値を検証する処理」を返している。
+
+**1. 設定を渡して専用の処理関数を作る**
+
+同じ構造の関数を、設定だけ変えて複数作りたいときに使う。
+
+```typescript
+function createTaxCalculator(rate: number): (price: number) => number {
+  return (price) => price * (1 + rate);
+}
+
+const calcJP = createTaxCalculator(0.10);
+const calcUS = createTaxCalculator(0.08);
+
+calcJP(1000); // 1100
+calcUS(1000); // 1080
+```
+
+**2. イベントハンドラーの生成**
+
+ほぼ同じハンドラーを複数書かずに済む。React で頻出。
+
+```typescript
+function createChangeHandler(field: string): (e: Event) => void {
+  return (e) => {
+    console.log(`${field} が変更された`);
+  };
+}
+
+input.addEventListener("change", createChangeHandler("email"));
+input.addEventListener("change", createChangeHandler("username"));
+```
+
+**3. デバウンス（入力のたびに処理を走らせない）**
+
+```typescript
+function debounce(fn: () => void, delay: number): () => void {
+  let timer: ReturnType<typeof setTimeout>;
+  return () => {
+    clearTimeout(timer);
+    timer = setTimeout(fn, delay);
+  };
+}
+
+const search = debounce(() => console.log("検索実行"), 300);
+// 連続入力しても最後の入力から300ms後に1回だけ実行される
+input.addEventListener("input", search);
+```
 
 ---
 
